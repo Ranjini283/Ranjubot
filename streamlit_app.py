@@ -9,20 +9,33 @@ st.title("RR_Healthcare_Bot")
 
 # Initialize session state for chat history
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    # Add a system message to enforce guardrails
+    st.session_state.messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a healthcare assistant specialized in providing general medical advice. "
+                "Your responses should strictly focus on medical-related queries. "
+                "If the user asks about non-medical topics, politely decline and remind them that you only handle medical-related questions. "
+                "Do not provide diagnoses, prescriptions, or specific medical treatments—only offer general remedies and advice. "
+                "Always encourage users to consult a licensed healthcare professional for personalized care."
+            )
+        }
+    ]
 
 # Display chat history
 for message in st.session_state.messages:
     role, content = message["role"], message["content"]
-    with st.chat_message(role):
-        st.markdown(content)
+    if role != "system":  # Only display user and assistant messages, not the system message
+        with st.chat_message(role):
+            st.markdown(content)
 
 # Collect user input for symptoms
 user_input = st.chat_input("Describe your symptoms here...")
 
 # Function to get a response from OpenAI with health advice
 def get_response(prompt):
-    # Here, you may include a more specific prompt or fine-tune the assistant's instructions to provide general remedies
+    # Include the system prompt and conversation history in the request
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
